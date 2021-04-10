@@ -56,11 +56,6 @@ namespace zs
 			Write(std::addressof(value), sizeof(value));
 		}
 
-		void Write(const std::string& value)
-		{
-			Write(std::string_view(value));
-		}
-
 		void Write(std::string_view value)
 		{
 			Write(value.size());
