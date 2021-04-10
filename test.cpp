@@ -14,17 +14,18 @@ void Check(zs::InputArchive& in, T target)
         abort();
 }
 
+struct POD
+{
+    char c;
+    int i;
+
+    bool operator ==(const POD&) const =default;
+};
+
 int main()
 {
     using namespace std::literals;
 
-    struct POD
-    {
-        char c;
-        int i;
-
-        bool operator ==(const POD&) const =default;
-    };
     auto data=std::make_tuple
     (
         true,
