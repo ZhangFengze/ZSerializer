@@ -44,23 +44,27 @@ namespace zs
 		OutputArchive(std::ostream& os)
 			:os_(os){}
 
+		void Write(const void* source, size_t bytes)
+		{
+			os_.write(reinterpret_cast<const char*>(source), bytes);
+		}
+
 		// TODO raw string literals is different to std::string?
 		template<IsPOD T>
 		void Write(const T& value)
 		{
-			os_.write(reinterpret_cast<const char*>(std::addressof(value)), sizeof(value));
+			Write(std::addressof(value), sizeof(value));
 		}
 
 		void Write(const std::string& value)
 		{
-			Write(value.size());
-			os_.write(value.data(), value.size());
+			Write(std::string_view(value));
 		}
 
 		void Write(std::string_view value)
 		{
 			Write(value.size());
-			os_.write(value.data(), value.size());
+			Write(value.data(), value.size());
 		}
 
 		template<typename T>
@@ -81,7 +85,7 @@ namespace zs
 		void Write(const std::vector<T>& vec)
 		{
 			Write(vec.size());
-			os_.write(reinterpret_cast<const char*>(vec.data()), vec.size() * sizeof(T));
+			Write(vec.data(), vec.size() * sizeof(T));
 		}
 
 		template<typename T>
