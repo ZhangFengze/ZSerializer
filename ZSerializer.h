@@ -33,21 +33,21 @@ namespace zs
 	template<typename T>
 	constexpr bool Optional_<std::optional<T>> = true;
 	template<typename T>
-	concept Optional= Optional_<T>;
+	concept Optional = Optional_<T>;
 
 	template<typename T>
 	constexpr bool Vector_ = false;
 	template<typename T>
 	constexpr bool Vector_<std::vector<T>> = true;
 	template<typename T>
-	concept Vector= Vector_<T>;
+	concept Vector = Vector_<T>;
 
 	template<typename T>
 	constexpr bool Array_ = false;
 	template<typename T, size_t size>
 	constexpr bool Array_<std::array<T, size>> = true;
 	template<typename T>
-	concept Array= Array_<T>;
+	concept Array = Array_<T>;
 
 	template<typename T, typename U>
 	concept Same = std::is_same_v<T, U>;
@@ -56,7 +56,7 @@ namespace zs
 	{
 	public:
 		OutputArchive(std::ostream& os)
-			:os_(os){}
+			:os_(os) {}
 
 		void Write(const void* source, size_t bytes)
 		{
@@ -85,8 +85,8 @@ namespace zs
 		}
 
 		template<typename T>
-			requires (Vector<T> && POD<typename T::value_type>) || String<T> || StringView<T>
-		void Write(const T& value)
+			requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
+		void Write(const T & value)
 		{
 			Write(value.size());
 			Write(value.data(), value.size() * sizeof(T::value_type));
@@ -115,21 +115,21 @@ namespace zs
 	{
 	public:
 		InputArchive(std::istream& is)
-			:is_(is){}
+			:is_(is) {}
 
 		bool Read(void* dest, size_t bytes)
 		{
 			is_.read(reinterpret_cast<char*>(dest), bytes);
-			return is_.gcount()==bytes;
+			return is_.gcount() == bytes;
 		}
 
-		struct Error{};
+		struct Error {};
 
 		template<POD T>
 		std::variant<T, Error> Read()
 		{
 			T value;
-			if(Read(std::addressof(value), sizeof(value)))
+			if (Read(std::addressof(value), sizeof(value)))
 				return value;
 			else
 				return Error{};
@@ -138,14 +138,14 @@ namespace zs
 		template<Optional T>
 		std::variant<T, Error> Read()
 		{
-			auto hasValue=Read<bool>();
-			if(std::holds_alternative<Error>(hasValue))
+			auto hasValue = Read<bool>();
+			if (std::holds_alternative<Error>(hasValue))
 				return Error{};
 
-			if(std::get<bool>(hasValue))
+			if (std::get<bool>(hasValue))
 			{
-				auto value=Read<T::value_type>();
-				if(std::holds_alternative<Error>(value))
+				auto value = Read<T::value_type>();
+				if (std::holds_alternative<Error>(value))
 					return Error{};
 				return T(std::get<T::value_type>(value));
 			}
@@ -156,16 +156,16 @@ namespace zs
 		}
 
 		template<typename T>
-			requires (Vector<T> && POD<typename T::value_type>) || String<T>
+			requires (Vector<T>&& POD<typename T::value_type>) || String<T>
 		std::variant<T, Error> Read()
 		{
-			auto size=Read<size_t>();
-			if(std::holds_alternative<Error>(size))
+			auto size = Read<size_t>();
+			if (std::holds_alternative<Error>(size))
 				return Error{};
 
 			T value;
 			value.resize(std::get<size_t>(size));
-			if(Read(value.data(), value.size()*sizeof(T::value_type)))
+			if (Read(value.data(), value.size() * sizeof(T::value_type)))
 				return value;
 			else
 				return Error{};
@@ -174,15 +174,15 @@ namespace zs
 		template<typename T> requires Vector<T> && !POD<typename T::value_type>
 		std::variant<T, Error> Read()
 		{
-			auto size=Read<size_t>();
-			if(std::holds_alternative<Error>(size))
+			auto size = Read<size_t>();
+			if (std::holds_alternative<Error>(size))
 				return Error{};
 
 			T vec;
-			for(size_t i=0;i<std::get<size_t>(size);++i)
+			for (size_t i = 0;i < std::get<size_t>(size);++i)
 			{
-				auto v=Read<T::value_type>();
-				if(std::holds_alternative<Error>(v))
+				auto v = Read<T::value_type>();
+				if (std::holds_alternative<Error>(v))
 					return Error{};
 				vec.emplace_back(std::move(std::get<T::value_type>(v)));
 			}
@@ -193,12 +193,12 @@ namespace zs
 		std::variant<T, Error> Read()
 		{
 			T arr;
-			for(size_t i=0;i<arr.size();++i)
+			for (size_t i = 0;i < arr.size();++i)
 			{
-				auto v=Read<T::value_type>();
-				if(std::holds_alternative<Error>(v))
+				auto v = Read<T::value_type>();
+				if (std::holds_alternative<Error>(v))
 					return Error{};
-				arr[i]=std::move(std::get<T::value_type>(v));
+				arr[i] = std::move(std::get<T::value_type>(v));
 			}
 			return arr;
 		}

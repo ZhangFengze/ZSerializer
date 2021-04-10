@@ -7,10 +7,10 @@
 template<typename T>
 void Check(zs::InputArchive& in, T target)
 {
-    auto got=in.Read<T>();
-    if(std::holds_alternative<zs::InputArchive::Error>(got))
+    auto got = in.Read<T>();
+    if (std::holds_alternative<zs::InputArchive::Error>(got))
         abort();
-    if(std::get<T>(got)!=target)
+    if (std::get<T>(got) != target)
         abort();
 }
 
@@ -19,14 +19,14 @@ struct POD
     char c;
     int i;
 
-    bool operator ==(const POD&) const =default;
+    bool operator ==(const POD&) const = default;
 };
 
 int main()
 {
     using namespace std::literals;
 
-    auto data=std::make_tuple
+    auto data = std::make_tuple
     (
         true,
         false,
@@ -63,11 +63,11 @@ int main()
 
     std::ostringstream oss;
     zs::OutputArchive out(oss);
-    std::apply([&out](auto&&... args) {(out.Write(args),...);}, data);
+    std::apply([&out](auto&&... args) {(out.Write(args), ...); }, data);
 
     std::istringstream iss(oss.str());
     zs::InputArchive in(iss);
-    std::apply([&in](auto&&... args){(Check(in, args),...);}, data);
+    std::apply([&in](auto&&... args) {(Check(in, args), ...); }, data);
 
     return 0;
 }
