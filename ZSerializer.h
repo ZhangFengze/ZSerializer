@@ -147,7 +147,7 @@ namespace zs
 				auto value=Read<T::value_type>();
 				if(std::holds_alternative<Error>(value))
 					return Error{};
-				return std::optional<T::value_type>(std::get<T::value_type>(value));
+				return T(std::get<T::value_type>(value));
 			}
 			else
 			{
