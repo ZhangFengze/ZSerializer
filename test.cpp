@@ -3,6 +3,67 @@
 #include <sstream>
 #include <tuple>
 
+struct POD
+{
+    char c;
+    int i;
+
+    bool operator ==(const POD&) const = default;
+};
+
+struct Vec3
+{
+    float x, y, z;
+    bool operator ==(const Vec3&) const = default;
+};
+
+struct State
+{
+    std::string name;
+    float hp;
+    Vec3 pos;
+    Vec3 vel;
+    bool operator ==(const State&) const = default;
+};
+
+namespace zs
+{
+    void Write(std::ostream& os, const State& state)
+    {
+        Write(os, state.name);
+        Write(os, state.hp);
+        Write(os, state.pos);
+        Write(os, state.vel);
+    }
+
+    template<typename T> requires Same<T,State>
+    std::variant<T, Error> Read(std::istream& is)
+    {
+        auto name=Read<std::string>(is);
+        if(std::holds_alternative<Error>(name))
+            return Error{};
+
+        auto hp=Read<float>(is);
+        if(std::holds_alternative<Error>(hp))
+            return Error{};
+
+        auto pos=Read<Vec3>(is);
+        if(std::holds_alternative<Error>(pos))
+            return Error{};
+
+        auto vel=Read<Vec3>(is);
+        if(std::holds_alternative<Error>(vel))
+            return Error{};
+
+        return State
+        {
+            std::get<std::string>(name),
+            std::get<float>(hp),
+            std::get<Vec3>(pos),
+            std::get<Vec3>(vel),
+        };
+    }
+}
 
 template<typename T>
 void Check(std::istream& is, T target)
@@ -13,14 +74,6 @@ void Check(std::istream& is, T target)
     if (std::get<T>(got) != target)
         abort();
 }
-
-struct POD
-{
-    char c;
-    int i;
-
-    bool operator ==(const POD&) const = default;
-};
 
 int main()
 {
@@ -44,6 +97,7 @@ int main()
         103.f,
         48901.0,
 
+        State{"tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} },
         POD{ 'a',33 },
 
         // "the",
