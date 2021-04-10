@@ -60,6 +60,9 @@ namespace zs
 	template<typename T>
 	void Write(std::ostream& os, const T& value);
 
+	template<typename T>
+	void Write(std::ostream& os, const T* value) =delete;
+
 	template<POD T>
 	void Write(std::ostream& os, const T& value)
 	{
