@@ -128,25 +128,19 @@ namespace zs
 	std::variant<T, Error> Read(std::istream& is)
 	{
 		T value;
-		if (Read(is, std::addressof(value), sizeof(value)))
-			return value;
-		else
+		if (!Read(is, std::addressof(value), sizeof(value)))
 			return Error{};
+		return value;
 	}
 
 	template<Optional T>
 	std::variant<T, Error> Read(std::istream& is)
 	{
 		ZS_READ(bool, is, hasValue);
-		if (hasValue)
-		{
-			ZS_READ(typename T::value_type, is, value);
-			return T(value);
-		}
-		else
-		{
+		if (!hasValue)
 			return std::nullopt;
-		}
+		ZS_READ(typename T::value_type, is, value);
+		return T(value);
 	}
 
 	template<typename T>
@@ -157,10 +151,9 @@ namespace zs
 
 		T value;
 		value.resize(size);
-		if (Read(is, value.data(), value.size() * sizeof(T::value_type)))
-			return value;
-		else
+		if (!Read(is, value.data(), value.size() * sizeof(T::value_type)))
 			return Error{};
+		return value;
 	}
 
 	template<typename T> requires Vector<T> && !POD<typename T::value_type>
