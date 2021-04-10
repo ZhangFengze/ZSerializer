@@ -67,4 +67,6 @@ int main()
     std::istringstream iss(oss.str());
     zs::InputArchive in(iss);
     std::apply([&in](auto&&... args){(Check(in, args),...);}, data);
+
+    return 0;
 }
