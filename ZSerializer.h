@@ -52,57 +52,13 @@ namespace zs
 	template<typename T, typename U>
 	concept Same = std::is_same_v<T, U>;
 
-	void Write(std::ostream& os, const void* source, size_t bytes);
-
-	template<typename T>
-	void Write(std::ostream& os, const T& value);
-
-	template<POD T>
-	void Write(std::ostream& os, const T& value);
-
-	template<Optional T>
-	void Write(std::ostream& os, const T& value);
-
-	template<typename T>
-		requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
-	void Write(std::ostream& os, const T& value);
-
-	template<typename T> requires !POD<T>
-	void Write(std::ostream& os, const std::vector<T>& vec);
-
-	template<typename T, size_t size> requires !POD<T>
-	void Write(std::ostream& os, const std::array<T, size>& arr);
-
-	bool Read(std::istream& is, void* dest, size_t bytes);
-
-	struct Error {};
-
-	template<typename T>
-	std::variant<T, Error> Read(std::istream& is);
-
-	template<POD T>
-	std::variant<T, Error> Read(std::istream& is);
-
-	template<Optional T>
-	std::variant<T, Error> Read(std::istream& is);
-
-	template<typename T>
-		requires (Vector<T>&& POD<typename T::value_type>) || String<T>
-	std::variant<T, Error> Read(std::istream& is);
-
-	template<typename T> requires Vector<T> && !POD<typename T::value_type>
-	std::variant<T, Error> Read(std::istream& is);
-
-	template<typename T> requires Array<T> && !POD<typename T::value_type>
-	std::variant<T, Error> Read(std::istream& is);
-
-
-	// impl
-
 	void Write(std::ostream& os, const void* source, size_t bytes)
 	{
 		os.write(reinterpret_cast<const char*>(source), bytes);
 	}
+
+	template<typename T>
+	void Write(std::ostream& os, const T& value);
 
 	template<POD T>
 	void Write(std::ostream& os, const T& value)
@@ -152,6 +108,11 @@ namespace zs
 		is.read(reinterpret_cast<char*>(dest), bytes);
 		return is.gcount() == bytes;
 	}
+
+	struct Error {};
+
+	template<typename T>
+	std::variant<T, Error> Read(std::istream& is);
 
 	template<POD T>
 	std::variant<T, Error> Read(std::istream& is)
