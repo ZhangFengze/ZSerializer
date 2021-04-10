@@ -64,7 +64,7 @@ namespace zs
 		requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
 	void Write(std::ostream& os, const T& value);
 
-	template<typename T>
+	template<typename T> requires !POD<T>
 	void Write(std::ostream& os, const std::vector<T>& vec);
 
 	template<typename T, size_t size> requires !POD<T>
@@ -126,7 +126,7 @@ namespace zs
 		Write(os, value.data(), value.size() * sizeof(T::value_type));
 	}
 
-	template<typename T>
+	template<typename T> requires !POD<T>
 	void Write(std::ostream& os, const std::vector<T>& vec)
 	{
 		Write(os, vec.size());
