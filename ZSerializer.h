@@ -52,157 +52,143 @@ namespace zs
 	template<typename T, typename U>
 	concept Same = std::is_same_v<T, U>;
 
-	class OutputArchive
+	void Write(std::ostream& os, const void* source, size_t bytes)
 	{
-	public:
-		OutputArchive(std::ostream& os)
-			:os_(os) {}
+		os.write(reinterpret_cast<const char*>(source), bytes);
+	}
 
-		void Write(const void* source, size_t bytes)
-		{
-			os_.write(reinterpret_cast<const char*>(source), bytes);
-		}
+	template<typename T>
+	void Write(std::ostream& os, const T& value);
 
-		template<POD T>
-		void Write(const T& value)
-		{
-			Write(std::addressof(value), sizeof(value));
-		}
-
-		template<typename T>
-		void Write(const std::optional<T>& value)
-		{
-			if (value)
-			{
-				Write(true);
-				Write(*value);
-			}
-			else
-			{
-				Write(false);
-			}
-		}
-
-		template<typename T>
-			requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
-		void Write(const T & value)
-		{
-			Write(value.size());
-			Write(value.data(), value.size() * sizeof(T::value_type));
-		}
-
-		template<typename T>
-		void Write(const std::vector<T>& vec)
-		{
-			Write(vec.size());
-			for (const auto& v : vec)
-				Write(v);
-		}
-
-		template<typename T, size_t size> requires !POD<T>
-		void Write(const std::array<T, size>& arr)
-		{
-			for (const auto& v : arr)
-				Write(v);
-		}
-
-	private:
-		std::ostream& os_;
-	};
-
-	class InputArchive
+	template<POD T>
+	void Write(std::ostream& os, const T& value)
 	{
-	public:
-		InputArchive(std::istream& is)
-			:is_(is) {}
+		Write(os, std::addressof(value), sizeof(value));
+	}
 
-		bool Read(void* dest, size_t bytes)
+	template<typename T>
+	void Write(std::ostream& os, const std::optional<T>& value)
+	{
+		if (value)
 		{
-			is_.read(reinterpret_cast<char*>(dest), bytes);
-			return is_.gcount() == bytes;
+			Write(os, true);
+			Write(os, *value);
 		}
-
-		struct Error {};
-
-		template<POD T>
-		std::variant<T, Error> Read()
+		else
 		{
-			T value;
-			if (Read(std::addressof(value), sizeof(value)))
-				return value;
-			else
+			Write(os, false);
+		}
+	}
+
+	template<typename T>
+		requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
+	void Write(std::ostream& os, const T & value)
+	{
+		Write(os, value.size());
+		Write(os, value.data(), value.size() * sizeof(T::value_type));
+	}
+
+	template<typename T>
+	void Write(std::ostream& os, const std::vector<T>& vec)
+	{
+		Write(os, vec.size());
+		for (const auto& v : vec)
+			Write(os, v);
+	}
+
+	template<typename T, size_t size> requires !POD<T>
+	void Write(std::ostream& os, const std::array<T, size>& arr)
+	{
+		for (const auto& v : arr)
+			Write(os, v);
+	}
+
+	bool Read(std::istream& is, void* dest, size_t bytes)
+	{
+		is.read(reinterpret_cast<char*>(dest), bytes);
+		return is.gcount() == bytes;
+	}
+
+	struct Error {};
+
+	template<typename T>
+	std::variant<T, Error> Read(std::istream& is);
+
+	template<POD T>
+	std::variant<T, Error> Read(std::istream& is)
+	{
+		T value;
+		if (Read(is, std::addressof(value), sizeof(value)))
+			return value;
+		else
+			return Error{};
+	}
+
+	template<Optional T>
+	std::variant<T, Error> Read(std::istream& is)
+	{
+		auto hasValue = Read<bool>(is);
+		if (std::holds_alternative<Error>(hasValue))
+			return Error{};
+
+		if (std::get<bool>(hasValue))
+		{
+			auto value = Read<T::value_type>(is);
+			if (std::holds_alternative<Error>(value))
 				return Error{};
+			return T(std::get<T::value_type>(value));
 		}
-
-		template<Optional T>
-		std::variant<T, Error> Read()
+		else
 		{
-			auto hasValue = Read<bool>();
-			if (std::holds_alternative<Error>(hasValue))
-				return Error{};
-
-			if (std::get<bool>(hasValue))
-			{
-				auto value = Read<T::value_type>();
-				if (std::holds_alternative<Error>(value))
-					return Error{};
-				return T(std::get<T::value_type>(value));
-			}
-			else
-			{
-				return std::nullopt;
-			}
+			return std::nullopt;
 		}
+	}
 
-		template<typename T>
-			requires (Vector<T>&& POD<typename T::value_type>) || String<T>
-		std::variant<T, Error> Read()
+	template<typename T>
+		requires (Vector<T>&& POD<typename T::value_type>) || String<T>
+	std::variant<T, Error> Read(std::istream& is)
+	{
+		auto size = Read<size_t>(is);
+		if (std::holds_alternative<Error>(size))
+			return Error{};
+
+		T value;
+		value.resize(std::get<size_t>(size));
+		if (Read(is, value.data(), value.size() * sizeof(T::value_type)))
+			return value;
+		else
+			return Error{};
+	}
+
+	template<typename T> requires Vector<T> && !POD<typename T::value_type>
+	std::variant<T, Error> Read(std::istream& is)
+	{
+		auto size = Read<size_t>(is);
+		if (std::holds_alternative<Error>(size))
+			return Error{};
+
+		T vec;
+		for (size_t i = 0;i < std::get<size_t>(size);++i)
 		{
-			auto size = Read<size_t>();
-			if (std::holds_alternative<Error>(size))
+			auto v = Read<T::value_type>(is);
+			if (std::holds_alternative<Error>(v))
 				return Error{};
-
-			T value;
-			value.resize(std::get<size_t>(size));
-			if (Read(value.data(), value.size() * sizeof(T::value_type)))
-				return value;
-			else
-				return Error{};
+			vec.emplace_back(std::move(std::get<T::value_type>(v)));
 		}
+		return vec;
+	}
 
-		template<typename T> requires Vector<T> && !POD<typename T::value_type>
-		std::variant<T, Error> Read()
+	template<typename T> requires Array<T> && !POD<typename T::value_type>
+	std::variant<T, Error> Read(std::istream& is)
+	{
+		T arr;
+		for (size_t i = 0;i < arr.size();++i)
 		{
-			auto size = Read<size_t>();
-			if (std::holds_alternative<Error>(size))
+			auto v = Read<T::value_type>(is);
+			if (std::holds_alternative<Error>(v))
 				return Error{};
-
-			T vec;
-			for (size_t i = 0;i < std::get<size_t>(size);++i)
-			{
-				auto v = Read<T::value_type>();
-				if (std::holds_alternative<Error>(v))
-					return Error{};
-				vec.emplace_back(std::move(std::get<T::value_type>(v)));
-			}
-			return vec;
+			arr[i] = std::move(std::get<T::value_type>(v));
 		}
-
-		template<typename T> requires Array<T> && !POD<typename T::value_type>
-		std::variant<T, Error> Read()
-		{
-			T arr;
-			for (size_t i = 0;i < arr.size();++i)
-			{
-				auto v = Read<T::value_type>();
-				if (std::holds_alternative<Error>(v))
-					return Error{};
-				arr[i] = std::move(std::get<T::value_type>(v));
-			}
-			return arr;
-		}
-
-	private:
-		std::istream& is_;
-	};
+		return arr;
+	}
 }

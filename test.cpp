@@ -5,10 +5,10 @@
 
 
 template<typename T>
-void Check(zs::InputArchive& in, T target)
+void Check(std::istream& is, T target)
 {
-    auto got = in.Read<T>();
-    if (std::holds_alternative<zs::InputArchive::Error>(got))
+    auto got = zs::Read<T>(is);
+    if (std::holds_alternative<zs::Error>(got))
         abort();
     if (std::get<T>(got) != target)
         abort();
@@ -62,12 +62,10 @@ int main()
     );
 
     std::ostringstream oss;
-    zs::OutputArchive out(oss);
-    std::apply([&out](auto&&... args) {(out.Write(args), ...); }, data);
+    std::apply([&oss](auto&&... args) {(zs::Write(oss, args), ...); }, data);
 
     std::istringstream iss(oss.str());
-    zs::InputArchive in(iss);
-    std::apply([&in](auto&&... args) {(Check(in, args), ...); }, data);
+    std::apply([&iss](auto&&... args) {(Check(iss, args), ...); }, data);
 
     return 0;
 }
