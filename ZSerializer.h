@@ -89,7 +89,7 @@ namespace zs
 		void Write(const T& value)
 		{
 			Write(value.size());
-			Write(value.data(), value.size() * sizeof(typename T::value_type));
+			Write(value.data(), value.size() * sizeof(T::value_type));
 		}
 
 		template<typename T>
@@ -181,10 +181,10 @@ namespace zs
 			T vec;
 			for(size_t i=0;i<std::get<size_t>(size);++i)
 			{
-				auto v=Read<typename T::value_type>();
+				auto v=Read<T::value_type>();
 				if(std::holds_alternative<Error>(v))
 					return Error{};
-				vec.emplace_back(std::get<typename T::value_type>(v));
+				vec.emplace_back(std::get<T::value_type>(v));
 			}
 			return vec;
 		}
@@ -195,10 +195,10 @@ namespace zs
 			T arr;
 			for(size_t i=0;i<arr.size();++i)
 			{
-				auto v=Read<typename T::value_type>();
+				auto v=Read<T::value_type>();
 				if(std::holds_alternative<Error>(v))
 					return Error{};
-				arr[i]=std::move(std::get<typename T::value_type>(v));
+				arr[i]=std::move(std::get<T::value_type>(v));
 			}
 			return arr;
 		}
