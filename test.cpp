@@ -3,14 +3,6 @@
 #include <sstream>
 #include <tuple>
 
-struct POD
-{
-    char c;
-    int i;
-
-    bool operator ==(const POD&) const = default;
-};
-
 struct Vec3
 {
     float x, y, z;
@@ -99,14 +91,13 @@ int main()
         48901.0,
 
         State{"tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} },
-        POD{ 'a',33 },
 
         // "the",
         // "quick"sv,
         std::string("brown"),
 
         std::optional<std::string>{"fox"},
-        std::optional<POD>{std::nullopt},
+        std::optional<Vec3>{std::nullopt},
 
         std::vector<int32_t>{1, 2, 3},
         std::vector<std::string>{"jumps", "over", "the"},
