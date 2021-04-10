@@ -21,7 +21,7 @@ struct State
 namespace zs
 {
     template<>
-    struct Trait<State>: public WriteMembers<State>
+    struct Trait<State>: public WriteMembers<State>, public ReadMembers<State>
     {
         static constexpr auto members=std::make_tuple
         (
@@ -31,17 +31,6 @@ namespace zs
             &State::vel
         );
     };
-
-    template<>
-    std::variant<State, Error> Read(std::istream& is)
-    {
-        ZS_READ(std::string, is, name);
-        ZS_READ(float, is, hp);
-        ZS_READ(Vec3, is, pos);
-        ZS_READ(Vec3, is, vel);
-
-        return State{name, hp, pos, vel};
-    }
 }
 
 template<typename T>

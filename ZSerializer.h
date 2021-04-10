@@ -18,6 +18,12 @@
 
 namespace zs
 {
+	template<typename Tuple, typename Func>
+	void ForEach(Tuple&& tuple, Func&& func)
+	{
+		std::apply([&func](auto&& ...args){(func(args),...);}, tuple);
+	}
+
 	template<typename T>
 	concept POD = std::is_pod_v<T>;
 
@@ -145,6 +151,52 @@ namespace zs
 
 	template<typename T>
 	std::variant<T, Error> Read(std::istream& is);
+
+	template<typename T>
+	struct ReadMembers
+	{
+		struct TryRead
+		{
+			TryRead(std::istream& is, T& value, bool& failed)
+				:is_(is), v_(value), failed_(failed){}
+
+			bool& failed_;
+			std::istream& is_;
+			T& v_;
+
+			template<typename PointerToMember>
+			void operator()(PointerToMember member) const
+			{
+				if(failed_)
+					return;
+				using Member = std::decay_t<decltype(std::declval<T>().*member)>;
+				using zs::Read;
+				auto temp=Read<Member>(is_);
+				if(std::holds_alternative<Error>(temp))
+				{
+					failed_=true;
+					return;
+				}
+				v_.*member=std::get<Member>(temp);
+			}
+		};
+
+		static std::variant<T, Error> Read(std::istream& is)
+		{
+			T value;
+			bool failed = false;
+			ForEach(Trait<T>::members, TryRead(is, value, failed));
+			if(failed)
+				return Error{};
+			return value;
+		}
+	};
+
+	template<DefinedTrait T>
+	std::variant<T, Error> Read(std::istream& is)
+	{
+		return Trait<T>::Read(is);
+	}
 
 	template<POD T>
 	std::variant<T, Error> Read(std::istream& is)
