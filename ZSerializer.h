@@ -59,6 +59,12 @@ namespace zs
 	template<typename T, typename U>
 	concept Same = std::is_same_v<T, U>;
 
+	template<typename T>
+	struct Trait;
+
+	template<typename T>
+	concept DefinedTrait = requires{ Trait<T>::Write; };
+
 	void Write(std::ostream& os, const void* source, size_t bytes)
 	{
 		os.write(reinterpret_cast<const char*>(source), bytes);
@@ -69,6 +75,22 @@ namespace zs
 
 	template<typename T>
 	void Write(std::ostream& os, const T* value) =delete;
+
+	template<typename T>
+	struct WriteMembers
+	{
+		static void Write(std::ostream& os, const T& value)
+		{
+			using zs::Write;
+			std::apply([&os, &value](auto&&... args){(Write(os, value.*args), ...);}, Trait<T>::members);
+		}
+	};
+
+	template<DefinedTrait T>
+	void Write(std::ostream& os, const T& value)
+	{
+		Trait<T>::Write(os, value);
+	}
 
 	template<POD T>
 	void Write(std::ostream& os, const T& value)

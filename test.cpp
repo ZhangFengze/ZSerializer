@@ -21,13 +21,16 @@ struct State
 namespace zs
 {
     template<>
-    void Write(std::ostream& os, const State& state)
+    struct Trait<State>: public WriteMembers<State>
     {
-        Write(os, state.name);
-        Write(os, state.hp);
-        Write(os, state.pos);
-        Write(os, state.vel);
-    }
+        static constexpr auto members=std::make_tuple
+        (
+            &State::name,
+            &State::hp,
+            &State::pos,
+            &State::vel
+        );
+    };
 
     template<>
     std::variant<State, Error> Read(std::istream& is)
