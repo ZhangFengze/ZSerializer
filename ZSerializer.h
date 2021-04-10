@@ -69,7 +69,10 @@ namespace zs
 	struct Trait;
 
 	template<typename T>
-	concept DefinedTrait = requires{ Trait<T>::Write; };
+	concept DefinedWriteTrait = requires{ Trait<T>::Write; };
+
+	template<typename T>
+	concept DefinedReadTrait = requires{ Trait<T>::Read; };
 
 	void Write(std::ostream& os, const void* source, size_t bytes)
 	{
@@ -92,7 +95,7 @@ namespace zs
 		}
 	};
 
-	template<DefinedTrait T>
+	template<DefinedWriteTrait T>
 	void Write(std::ostream& os, const T& value)
 	{
 		Trait<T>::Write(os, value);
@@ -192,7 +195,7 @@ namespace zs
 		}
 	};
 
-	template<DefinedTrait T>
+	template<DefinedReadTrait T>
 	std::variant<T, Error> Read(std::istream& is)
 	{
 		return Trait<T>::Read(is);
