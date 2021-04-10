@@ -32,29 +32,12 @@ namespace zs
     template<>
     std::variant<State, Error> Read(std::istream& is)
     {
-        auto name=Read<std::string>(is);
-        if(std::holds_alternative<Error>(name))
-            return Error{};
+        ZS_READ(std::string, is, name);
+        ZS_READ(float, is, hp);
+        ZS_READ(Vec3, is, pos);
+        ZS_READ(Vec3, is, vel);
 
-        auto hp=Read<float>(is);
-        if(std::holds_alternative<Error>(hp))
-            return Error{};
-
-        auto pos=Read<Vec3>(is);
-        if(std::holds_alternative<Error>(pos))
-            return Error{};
-
-        auto vel=Read<Vec3>(is);
-        if(std::holds_alternative<Error>(vel))
-            return Error{};
-
-        return State
-        {
-            std::get<std::string>(name),
-            std::get<float>(hp),
-            std::get<Vec3>(pos),
-            std::get<Vec3>(vel),
-        };
+        return State{name, hp, pos, vel};
     }
 }
 

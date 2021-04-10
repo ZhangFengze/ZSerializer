@@ -9,6 +9,13 @@
 #include <vector>
 #include <array>
 
+#define ZS_READ(type, is, name)\
+		type name;\
+		if(auto temp = Read<type>(is); std::holds_alternative<Error>(temp))\
+			return Error{};\
+		else\
+			name = std::get<type>(temp);
+
 namespace zs
 {
 	template<typename T>
@@ -130,16 +137,11 @@ namespace zs
 	template<Optional T>
 	std::variant<T, Error> Read(std::istream& is)
 	{
-		auto hasValue = Read<bool>(is);
-		if (std::holds_alternative<Error>(hasValue))
-			return Error{};
-
-		if (std::get<bool>(hasValue))
+		ZS_READ(bool, is, hasValue);
+		if (hasValue)
 		{
-			auto value = Read<T::value_type>(is);
-			if (std::holds_alternative<Error>(value))
-				return Error{};
-			return T(std::get<T::value_type>(value));
+			ZS_READ(typename T::value_type, is, value);
+			return T(value);
 		}
 		else
 		{
@@ -151,12 +153,10 @@ namespace zs
 		requires (Vector<T>&& POD<typename T::value_type>) || String<T>
 	std::variant<T, Error> Read(std::istream& is)
 	{
-		auto size = Read<size_t>(is);
-		if (std::holds_alternative<Error>(size))
-			return Error{};
+		ZS_READ(size_t, is, size);
 
 		T value;
-		value.resize(std::get<size_t>(size));
+		value.resize(size);
 		if (Read(is, value.data(), value.size() * sizeof(T::value_type)))
 			return value;
 		else
@@ -166,17 +166,13 @@ namespace zs
 	template<typename T> requires Vector<T> && !POD<typename T::value_type>
 	std::variant<T, Error> Read(std::istream& is)
 	{
-		auto size = Read<size_t>(is);
-		if (std::holds_alternative<Error>(size))
-			return Error{};
+		ZS_READ(size_t, is, size);
 
 		T vec;
-		for (size_t i = 0;i < std::get<size_t>(size);++i)
+		for (size_t i = 0;i < size;++i)
 		{
-			auto v = Read<T::value_type>(is);
-			if (std::holds_alternative<Error>(v))
-				return Error{};
-			vec.emplace_back(std::move(std::get<T::value_type>(v)));
+			ZS_READ(typename T::value_type, is, v);
+			vec.emplace_back(std::move(v));
 		}
 		return vec;
 	}
@@ -187,10 +183,8 @@ namespace zs
 		T arr;
 		for (size_t i = 0;i < arr.size();++i)
 		{
-			auto v = Read<T::value_type>(is);
-			if (std::holds_alternative<Error>(v))
-				return Error{};
-			arr[i] = std::move(std::get<T::value_type>(v));
+			ZS_READ(typename T::value_type, is, v);
+			arr[i] = std::move(v);
 		}
 		return arr;
 	}
