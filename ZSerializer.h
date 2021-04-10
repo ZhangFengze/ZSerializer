@@ -57,8 +57,8 @@ namespace zs
 	template<POD T>
 	void Write(std::ostream& os, const T& value);
 
-	template<typename T>
-	void Write(std::ostream& os, const std::optional<T>& value);
+	template<Optional T>
+	void Write(std::ostream& os, const T& value);
 
 	template<typename T>
 		requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
@@ -104,8 +104,8 @@ namespace zs
 		Write(os, std::addressof(value), sizeof(value));
 	}
 
-	template<typename T>
-	void Write(std::ostream& os, const std::optional<T>& value)
+	template<Optional T>
+	void Write(std::ostream& os, const T& value)
 	{
 		if (value)
 		{
