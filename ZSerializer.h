@@ -184,7 +184,7 @@ namespace zs
 				auto v=Read<typename T::value_type>();
 				if(std::holds_alternative<Error>(v))
 					return Error{};
-				vec.emplace_back(std::move(std::get<typename T::value_type>(v)));
+				vec.emplace_back(std::get<typename T::value_type>(v));
 			}
 			return vec;
 		}
