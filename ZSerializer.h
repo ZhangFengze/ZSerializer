@@ -15,6 +15,20 @@ namespace zs
 	concept POD = std::is_pod_v<T>;
 
 	template<typename T>
+	constexpr bool String_ = false;
+	template<typename T>
+	constexpr bool String_<std::basic_string<T>> = true;
+	template<typename T>
+	concept String = String_<T>;
+
+	template<typename T>
+	constexpr bool StringView_ = false;
+	template<typename T>
+	constexpr bool StringView_<std::basic_string_view<T>> = true;
+	template<typename T>
+	concept StringView = StringView_<T>;
+
+	template<typename T>
 	constexpr bool Optional_ = false;
 	template<typename T>
 	constexpr bool Optional_<std::optional<T>> = true;
@@ -56,12 +70,6 @@ namespace zs
 			Write(std::addressof(value), sizeof(value));
 		}
 
-		void Write(std::string_view value)
-		{
-			Write(value.size());
-			Write(value.data(), value.size());
-		}
-
 		template<typename T>
 		void Write(const std::optional<T>& value)
 		{
@@ -76,11 +84,12 @@ namespace zs
 			}
 		}
 
-		template<POD T>
-		void Write(const std::vector<T>& vec)
+		template<typename T>
+			requires (Vector<T> && POD<typename T::value_type>) || String<T> || StringView<T>
+		void Write(const T& value)
 		{
-			Write(vec.size());
-			Write(vec.data(), vec.size() * sizeof(T));
+			Write(value.size());
+			Write(value.data(), value.size() * sizeof(typename T::value_type));
 		}
 
 		template<typename T>
@@ -126,21 +135,6 @@ namespace zs
 				return Error{};
 		}
 
-		template<typename T> requires Same<T, std::string>
-		std::variant<std::string, Error> Read()
-		{
-			auto size=Read<size_t>();
-			if(std::holds_alternative<Error>(size))
-				return Error{};
-
-			std::string value;
-			value.resize(std::get<size_t>(size));
-			if(Read(value.data(), value.size()))
-				return value;
-			else
-				return Error{};
-		}
-
 		template<Optional T>
 		std::variant<T, Error> Read()
 		{
@@ -161,17 +155,18 @@ namespace zs
 			}
 		}
 
-		template<typename T> requires Vector<T> && POD<typename T::value_type>
+		template<typename T>
+			requires (Vector<T> && POD<typename T::value_type>) || String<T>
 		std::variant<T, Error> Read()
 		{
 			auto size=Read<size_t>();
 			if(std::holds_alternative<Error>(size))
 				return Error{};
 
-			T vec;
-			vec.resize(std::get<size_t>(size));
-			if(Read(vec.data(), vec.size()*sizeof(T::value_type)))
-				return vec;
+			T value;
+			value.resize(std::get<size_t>(size));
+			if(Read(value.data(), value.size()*sizeof(T::value_type)))
+				return value;
 			else
 				return Error{};
 		}
