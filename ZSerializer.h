@@ -12,31 +12,31 @@
 namespace zs
 {
 	template<typename T>
-	concept IsPOD = std::is_pod_v<T>;
+	concept POD = std::is_pod_v<T>;
 
 	template<typename T>
-	constexpr bool IsOptional_ = false;
+	constexpr bool Optional_ = false;
 	template<typename T>
-	constexpr bool IsOptional_<std::optional<T>> = true;
+	constexpr bool Optional_<std::optional<T>> = true;
 	template<typename T>
-	concept IsOptional= IsOptional_<T>;
+	concept Optional= Optional_<T>;
 
 	template<typename T>
-	constexpr bool IsVector_ = false;
+	constexpr bool Vector_ = false;
 	template<typename T>
-	constexpr bool IsVector_<std::vector<T>> = true;
+	constexpr bool Vector_<std::vector<T>> = true;
 	template<typename T>
-	concept IsVector= IsVector_<T>;
+	concept Vector= Vector_<T>;
 
 	template<typename T>
-	constexpr bool IsArray_ = false;
+	constexpr bool Array_ = false;
 	template<typename T, size_t size>
-	constexpr bool IsArray_<std::array<T, size>> = true;
+	constexpr bool Array_<std::array<T, size>> = true;
 	template<typename T>
-	concept IsArray= IsArray_<T>;
+	concept Array= Array_<T>;
 
 	template<typename T, typename U>
-	concept IsSame = std::is_same_v<T, U>;
+	concept Same = std::is_same_v<T, U>;
 
 	class OutputArchive
 	{
@@ -50,7 +50,7 @@ namespace zs
 		}
 
 		// TODO raw string literals is different to std::string?
-		template<IsPOD T>
+		template<POD T>
 		void Write(const T& value)
 		{
 			Write(std::addressof(value), sizeof(value));
@@ -81,7 +81,7 @@ namespace zs
 			}
 		}
 
-		template<IsPOD T>
+		template<POD T>
 		void Write(const std::vector<T>& vec)
 		{
 			Write(vec.size());
@@ -96,7 +96,7 @@ namespace zs
 				Write(v);
 		}
 
-		template<typename T, size_t size> requires !IsPOD<T>
+		template<typename T, size_t size> requires !POD<T>
 		void Write(const std::array<T, size>& arr)
 		{
 			for (const auto& v : arr)
@@ -121,7 +121,7 @@ namespace zs
 
 		struct Error{};
 
-		template<IsPOD T>
+		template<POD T>
 		std::variant<T, Error> Read()
 		{
 			T value;
@@ -131,7 +131,7 @@ namespace zs
 				return Error{};
 		}
 
-		template<typename T> requires IsSame<T, std::string>
+		template<typename T> requires Same<T, std::string>
 		std::variant<std::string, Error> Read()
 		{
 			auto size=Read<size_t>();
@@ -146,7 +146,7 @@ namespace zs
 				return Error{};
 		}
 
-		template<IsOptional T>
+		template<Optional T>
 		std::variant<T, Error> Read()
 		{
 			auto hasValue=Read<bool>();
@@ -166,7 +166,7 @@ namespace zs
 			}
 		}
 
-		template<typename T> requires IsVector<T> && IsPOD<typename T::value_type>
+		template<typename T> requires Vector<T> && POD<typename T::value_type>
 		std::variant<T, Error> Read()
 		{
 			auto size=Read<size_t>();
@@ -181,7 +181,7 @@ namespace zs
 				return Error{};
 		}
 
-		template<typename T> requires IsVector<T> && !IsPOD<typename T::value_type>
+		template<typename T> requires Vector<T> && !POD<typename T::value_type>
 		std::variant<T, Error> Read()
 		{
 			auto size=Read<size_t>();
@@ -199,7 +199,7 @@ namespace zs
 			return vec;
 		}
 
-		template<typename T> requires IsArray<T> && !IsPOD<typename T::value_type>
+		template<typename T> requires Array<T> && !POD<typename T::value_type>
 		std::variant<T, Error> Read()
 		{
 			T arr;
