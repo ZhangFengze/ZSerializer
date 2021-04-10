@@ -63,7 +63,6 @@ namespace zs
 			os_.write(reinterpret_cast<const char*>(source), bytes);
 		}
 
-		// TODO raw string literals is different to std::string?
 		template<POD T>
 		void Write(const T& value)
 		{
