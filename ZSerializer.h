@@ -54,6 +54,9 @@ namespace zs
 
 	void Write(std::ostream& os, const void* source, size_t bytes);
 
+	template<typename T>
+	void Write(std::ostream& os, const T& value);
+
 	template<POD T>
 	void Write(std::ostream& os, const T& value);
 
@@ -73,6 +76,9 @@ namespace zs
 	bool Read(std::istream& is, void* dest, size_t bytes);
 
 	struct Error {};
+
+	template<typename T>
+	std::variant<T, Error> Read(std::istream& is);
 
 	template<POD T>
 	std::variant<T, Error> Read(std::istream& is);

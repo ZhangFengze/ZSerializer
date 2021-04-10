@@ -28,6 +28,7 @@ struct State
 
 namespace zs
 {
+    template<>
     void Write(std::ostream& os, const State& state)
     {
         Write(os, state.name);
@@ -112,7 +113,9 @@ int main()
 
         std::array<float, 3>{10.f, 12.f, 33.f},
 
-        std::array<std::string, 2>{"lazy", "dog"}
+        std::array<std::string, 2>{"lazy", "dog"},
+
+        std::array<State, 16>{State{ "Jerry", 12.f,{0,0,0},{0,0,1} }}
     );
 
     std::ostringstream oss;
