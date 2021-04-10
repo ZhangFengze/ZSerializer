@@ -37,8 +37,8 @@ namespace zs
         Write(os, state.vel);
     }
 
-    template<typename T> requires Same<T,State>
-    std::variant<T, Error> Read(std::istream& is)
+    template<>
+    std::variant<State, Error> Read(std::istream& is)
     {
         auto name=Read<std::string>(is);
         if(std::holds_alternative<Error>(name))
