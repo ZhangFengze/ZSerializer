@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "catch2/catch.hpp"
 
-#include "../ZSerializer.h"
+#include "../ZSerializer.hpp"
 #include <cstdint>
 #include <sstream>
 #include <tuple>
