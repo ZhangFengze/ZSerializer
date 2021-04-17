@@ -51,6 +51,9 @@ TEST_CASE("basic types")
     zs::Write(oss,103.f);
     zs::Write(oss,48901.0);
 
+    zs::Write(oss,nullptr);
+    zs::Write(oss, (void*)(0x12345678));
+
     std::istringstream iss(oss.str());
 
     Check(iss, true);
@@ -68,14 +71,15 @@ TEST_CASE("basic types")
 
     Check(iss, 103.f);
     Check(iss, 48901.0);
+
+    Check(iss, nullptr);
+    Check(iss, (void*)(0x12345678));
 }
 
 TEST_CASE("string")
 {
     std::ostringstream oss;
 
-    // pointers explicitly deleted
-    // zs::Write(oss,nullptr);
     zs::Write(oss,"the");
 
     zs::Write(oss,"quick"sv);
