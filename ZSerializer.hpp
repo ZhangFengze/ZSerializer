@@ -82,7 +82,7 @@ namespace zs
 			os.write(reinterpret_cast<const char*>(source), bytes);
 		}
 
-		std::string Str() const
+		std::string String() const
 		{
 			return os.str();
 		}

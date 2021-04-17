@@ -54,7 +54,7 @@ TEST_CASE("basic types")
     zs::Write(out, nullptr);
     zs::Write(out, (void*)(0x12345678));
 
-    zs::StringReader in(out.Str());
+    zs::StringReader in(out.String());
 
     Check(in, true);
     Check(in, false);
@@ -84,7 +84,7 @@ TEST_CASE("string")
     zs::Write(out, "quick"sv);
     zs::Write(out, std::string("brown"));
 
-    zs::StringReader in(out.Str());
+    zs::StringReader in(out.String());
 
     Check(in, std::string("the"));
     Check(in, std::string("quick"));
@@ -112,7 +112,7 @@ TEST_CASE("custom")
 
     zs::Write(out, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
 
-    zs::StringReader in(out.Str());
+    zs::StringReader in(out.String());
 
     Check(in, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
 }
@@ -124,7 +124,7 @@ TEST_CASE("optional")
     zs::Write(out, std::optional<std::string>{"fox"});
     zs::Write(out, std::optional<Vec3>{std::nullopt});
 
-    zs::StringReader in(out.Str());
+    zs::StringReader in(out.String());
 
     Check(in, std::optional<std::string>("fox"));
     Check(in, std::optional<Vec3>{std::nullopt});
@@ -137,7 +137,7 @@ TEST_CASE("vector")
     zs::Write(out, std::vector<int32_t>{1, 2, 3});
     zs::Write(out, std::vector<std::string>{"jumps", "over", "the"});
 
-    zs::StringReader in(out.Str());
+    zs::StringReader in(out.String());
 
     Check(in, std::vector<int32_t>{1, 2, 3});
     Check(in, std::vector<std::string>{"jumps", "over", "the"});
@@ -151,7 +151,7 @@ TEST_CASE("array")
     zs::Write(out, std::array<std::string, 2>{"lazy", "dog"});
     zs::Write(out, std::array<State, 16>{State{ "Jerry", 12.f,{0,0,0},{0,0,1} }});
 
-    zs::StringReader in(out.Str());
+    zs::StringReader in(out.String());
 
     Check(in, std::array<float, 3>{10.f, 12.f, 33.f});
     Check(in, std::array<std::string, 2>{"lazy", "dog"});
