@@ -123,6 +123,13 @@ namespace zs
 		}
 	}
 
+	void Write(std::ostream& os, const char* value)
+	{
+		size_t size = strlen(value);
+		Write(os, size);
+		Write(os, value, size);
+	}
+
 	template<typename T>
 		requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
 	void Write(std::ostream& os, const T& value)
