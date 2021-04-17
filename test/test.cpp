@@ -76,13 +76,14 @@ TEST_CASE("string")
 
     // pointers explicitly deleted
     // zs::Write(oss,nullptr);
-    // zs::Write(oss,"the");
+    zs::Write(oss,"the");
 
     zs::Write(oss,"quick"sv);
     zs::Write(oss,std::string("brown"));
 
     std::istringstream iss(oss.str());
 
+    Check(iss, std::string("the"));
     Check(iss, std::string("quick"));
     Check(iss, std::string("brown"));
 }
