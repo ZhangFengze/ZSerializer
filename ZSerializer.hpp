@@ -103,6 +103,16 @@ namespace zs
 			std::apply([&out, &value](auto&&... args){(Write(out, value.*args), ...);}, Trait<T>::members);
 		}
 	};
+	
+	template<typename T>
+	struct WriteBitwise
+	{
+		template<typename Out>
+		static void Write(Out& out, const T& value)
+		{
+			out.Write(std::addressof(value), sizeof(value));
+		}
+	};
 
 	template<DefinedWriteTrait T, typename Out>
 	void Write(Out& out, const T& value)
@@ -216,6 +226,19 @@ namespace zs
 			bool failed = false;
 			ForEach(Trait<T>::members, TryRead(in, value, failed));
 			if(failed)
+				return Error{};
+			return value;
+		}
+	};
+
+	template<typename T>
+	struct ReadBitwise
+	{
+		template<typename In>
+		static std::variant<T, Error> Read(In& in)
+		{
+			T value;
+			if (!in.Read(std::addressof(value), sizeof(value)))
 				return Error{};
 			return value;
 		}
