@@ -83,11 +83,6 @@ namespace zs
 	void Write(std::ostream& os, const T& value);
 
 	template<typename T>
-	void Write(std::ostream& os, const T* value) =delete;
-
-	void Write(std::ostream& os, nullptr_t)=delete;
-
-	template<typename T>
 	struct WriteMembers
 	{
 		static void Write(std::ostream& os, const T& value)
