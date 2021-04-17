@@ -23,10 +23,10 @@ struct State
     bool operator ==(const State&) const = default;
 };
 
-template<typename T>
-void Check(std::istream& is, T target)
+template<typename T, typename In>
+void Check(In& in, T target)
 {
-    auto result = zs::Read<T>(is);
+    auto result = zs::Read<T>(in);
     REQUIRE(std::holds_alternative<T>(result));
     REQUIRE(std::get<T>(result) == target);
 }
@@ -54,26 +54,26 @@ TEST_CASE("basic types")
     zs::Write(out, nullptr);
     zs::Write(out, (void*)(0x12345678));
 
-    std::istringstream iss(out.Str());
+    zs::StringReader in(out.Str());
 
-    Check(iss, true);
-    Check(iss, false);
+    Check(in, true);
+    Check(in, false);
 
-    Check(iss, int8_t(39));
-    Check(iss, int16_t(30045));
-    Check(iss, int32_t(993));
-    Check(iss, int64_t(9931234));
+    Check(in, int8_t(39));
+    Check(in, int16_t(30045));
+    Check(in, int32_t(993));
+    Check(in, int64_t(9931234));
 
-    Check(iss, uint8_t(240));
-    Check(iss, uint16_t(20033));
-    Check(iss, uint32_t(330));
-    Check(iss, uint64_t(783));
+    Check(in, uint8_t(240));
+    Check(in, uint16_t(20033));
+    Check(in, uint32_t(330));
+    Check(in, uint64_t(783));
 
-    Check(iss, 103.f);
-    Check(iss, 48901.0);
+    Check(in, 103.f);
+    Check(in, 48901.0);
 
-    Check(iss, nullptr);
-    Check(iss, (void*)(0x12345678));
+    Check(in, nullptr);
+    Check(in, (void*)(0x12345678));
 }
 
 TEST_CASE("string")
@@ -84,11 +84,11 @@ TEST_CASE("string")
     zs::Write(out, "quick"sv);
     zs::Write(out, std::string("brown"));
 
-    std::istringstream iss(out.Str());
+    zs::StringReader in(out.Str());
 
-    Check(iss, std::string("the"));
-    Check(iss, std::string("quick"));
-    Check(iss, std::string("brown"));
+    Check(in, std::string("the"));
+    Check(in, std::string("quick"));
+    Check(in, std::string("brown"));
 }
 
 namespace zs
@@ -112,9 +112,9 @@ TEST_CASE("custom")
 
     zs::Write(out, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
 
-    std::istringstream iss(out.Str());
+    zs::StringReader in(out.Str());
 
-    Check(iss, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
+    Check(in, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
 }
 
 TEST_CASE("optional")
@@ -124,10 +124,10 @@ TEST_CASE("optional")
     zs::Write(out, std::optional<std::string>{"fox"});
     zs::Write(out, std::optional<Vec3>{std::nullopt});
 
-    std::istringstream iss(out.Str());
+    zs::StringReader in(out.Str());
 
-    Check(iss, std::optional<std::string>("fox"));
-    Check(iss, std::optional<Vec3>{std::nullopt});
+    Check(in, std::optional<std::string>("fox"));
+    Check(in, std::optional<Vec3>{std::nullopt});
 }
 
 TEST_CASE("vector")
@@ -137,10 +137,10 @@ TEST_CASE("vector")
     zs::Write(out, std::vector<int32_t>{1, 2, 3});
     zs::Write(out, std::vector<std::string>{"jumps", "over", "the"});
 
-    std::istringstream iss(out.Str());
+    zs::StringReader in(out.Str());
 
-    Check(iss, std::vector<int32_t>{1, 2, 3});
-    Check(iss, std::vector<std::string>{"jumps", "over", "the"});
+    Check(in, std::vector<int32_t>{1, 2, 3});
+    Check(in, std::vector<std::string>{"jumps", "over", "the"});
 }
 
 TEST_CASE("array")
@@ -151,9 +151,9 @@ TEST_CASE("array")
     zs::Write(out, std::array<std::string, 2>{"lazy", "dog"});
     zs::Write(out, std::array<State, 16>{State{ "Jerry", 12.f,{0,0,0},{0,0,1} }});
 
-    std::istringstream iss(out.Str());
+    zs::StringReader in(out.Str());
 
-    Check(iss, std::array<float, 3>{10.f, 12.f, 33.f});
-    Check(iss, std::array<std::string, 2>{"lazy", "dog"});
-    Check(iss, std::array<State, 16>{State{ "Jerry", 12.f,{0,0,0},{0,0,1} }});
+    Check(in, std::array<float, 3>{10.f, 12.f, 33.f});
+    Check(in, std::array<std::string, 2>{"lazy", "dog"});
+    Check(in, std::array<State, 16>{State{ "Jerry", 12.f,{0,0,0},{0,0,1} }});
 }

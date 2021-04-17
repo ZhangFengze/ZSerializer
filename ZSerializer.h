@@ -9,9 +9,9 @@
 #include <vector>
 #include <array>
 
-#define ZS_READ(type, is, name)\
+#define ZS_READ(type, in, name)\
 		type name;\
-		if(auto temp = Read<type>(is); std::holds_alternative<Error>(temp))\
+		if(auto temp = Read<type>(in); std::holds_alternative<Error>(temp))\
 			return Error{};\
 		else\
 			name = std::get<type>(temp);
@@ -160,27 +160,35 @@ namespace zs
 			Write(out, v);
 	}
 
-	bool Read(std::istream& is, void* dest, size_t bytes)
+	struct StringReader
 	{
-		is.read(reinterpret_cast<char*>(dest), bytes);
-		return is.gcount() == bytes;
-	}
+		StringReader(const std::string& str):is(str){}
+
+		bool Read(void* dest, size_t bytes)
+		{
+			is.read(reinterpret_cast<char*>(dest), bytes);
+			return is.gcount() == bytes;
+		}
+
+		std::istringstream is;
+	};
 
 	struct Error {};
 
-	template<typename T>
-	std::variant<T, Error> Read(std::istream& is);
+	template<typename T, typename In>
+	std::variant<T, Error> Read(In& in);
 
 	template<typename T>
 	struct ReadMembers
 	{
+		template<typename In>
 		struct TryRead
 		{
-			TryRead(std::istream& is, T& value, bool& failed)
-				:is_(is), v_(value), failed_(failed){}
+			TryRead(In& in, T& value, bool& failed)
+				:in_(in), v_(value), failed_(failed){}
 
 			bool& failed_;
-			std::istream& is_;
+			In& in_;
 			T& v_;
 
 			template<typename PointerToMember>
@@ -190,7 +198,7 @@ namespace zs
 					return;
 				using Member = std::decay_t<decltype(std::declval<T>().*member)>;
 				using zs::Read;
-				auto temp=Read<Member>(is_);
+				auto temp=Read<Member>(in_);
 				if(std::holds_alternative<Error>(temp))
 				{
 					failed_=true;
@@ -200,76 +208,77 @@ namespace zs
 			}
 		};
 
-		static std::variant<T, Error> Read(std::istream& is)
+		template<typename In>
+		static std::variant<T, Error> Read(In& in)
 		{
 			T value;
 			bool failed = false;
-			ForEach(Trait<T>::members, TryRead(is, value, failed));
+			ForEach(Trait<T>::members, TryRead(in, value, failed));
 			if(failed)
 				return Error{};
 			return value;
 		}
 	};
 
-	template<DefinedReadTrait T>
-	std::variant<T, Error> Read(std::istream& is)
+	template<DefinedReadTrait T, typename In>
+	std::variant<T, Error> Read(In& in)
 	{
-		return Trait<T>::Read(is);
+		return Trait<T>::Read(in);
 	}
 
-	template<POD T>
-	std::variant<T, Error> Read(std::istream& is)
+	template<POD T, typename In>
+	std::variant<T, Error> Read(In& in)
 	{
 		T value;
-		if (!Read(is, std::addressof(value), sizeof(value)))
+		if (!in.Read(std::addressof(value), sizeof(value)))
 			return Error{};
 		return value;
 	}
 
-	template<Optional T>
-	std::variant<T, Error> Read(std::istream& is)
+	template<Optional T, typename In>
+	std::variant<T, Error> Read(In& in)
 	{
-		ZS_READ(bool, is, hasValue);
+		ZS_READ(bool, in, hasValue);
 		if (!hasValue)
 			return std::nullopt;
-		ZS_READ(typename T::value_type, is, value);
+		ZS_READ(typename T::value_type, in, value);
 		return T(value);
 	}
 
-	template<typename T>
+	template<typename T, typename In>
 		requires (Vector<T>&& POD<typename T::value_type>) || String<T>
-	std::variant<T, Error> Read(std::istream& is)
+	std::variant<T, Error> Read(In& in)
 	{
-		ZS_READ(size_t, is, size);
+		ZS_READ(size_t, in, size);
 
 		T value;
 		value.resize(size);
-		if (!Read(is, value.data(), value.size() * sizeof(T::value_type)))
+		if (!in.Read(value.data(), value.size() * sizeof(T::value_type)))
 			return Error{};
 		return value;
 	}
 
-	template<typename T> requires Vector<T> && !POD<typename T::value_type>
-	std::variant<T, Error> Read(std::istream& is)
+	template<typename T, typename In> requires Vector<T> && !POD<typename T::value_type>
+	std::variant<T, Error> Read(In& in)
 	{
-		ZS_READ(size_t, is, size);
+		ZS_READ(size_t, in, size);
 
 		T vec;
 		for (size_t i = 0;i < size;++i)
 		{
-			ZS_READ(typename T::value_type, is, v);
+			ZS_READ(typename T::value_type, in, v);
 			vec.emplace_back(std::move(v));
 		}
 		return vec;
 	}
 
-	template<typename T> requires Array<T> && !POD<typename T::value_type>
-	std::variant<T, Error> Read(std::istream& is)
+	template<typename T, typename In> requires Array<T> && !POD<typename T::value_type>
+	std::variant<T, Error> Read(In& in)
 	{
 		T arr;
 		for (size_t i = 0;i < arr.size();++i)
 		{
-			ZS_READ(typename T::value_type, is, v);
+			ZS_READ(typename T::value_type, in, v);
 			arr[i] = std::move(v);
 		}
 		return arr;
