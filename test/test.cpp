@@ -33,28 +33,28 @@ void Check(std::istream& is, T target)
 
 TEST_CASE("basic types")
 {
-    std::ostringstream oss;
+    zs::StringWriter out;
 
-    zs::Write(oss, true);
-    zs::Write(oss, false);
+    zs::Write(out, true);
+    zs::Write(out, false);
 
-    zs::Write(oss, int8_t(39));
-    zs::Write(oss, int16_t(30045));
-    zs::Write(oss, int32_t(993));
-    zs::Write(oss, int64_t(9931234));
+    zs::Write(out, int8_t(39));
+    zs::Write(out, int16_t(30045));
+    zs::Write(out, int32_t(993));
+    zs::Write(out, int64_t(9931234));
 
-    zs::Write(oss, uint8_t(240));
-    zs::Write(oss, uint16_t(20033));
-    zs::Write(oss, uint32_t(330));
-    zs::Write(oss, uint64_t(783));
+    zs::Write(out, uint8_t(240));
+    zs::Write(out, uint16_t(20033));
+    zs::Write(out, uint32_t(330));
+    zs::Write(out, uint64_t(783));
 
-    zs::Write(oss, 103.f);
-    zs::Write(oss, 48901.0);
+    zs::Write(out, 103.f);
+    zs::Write(out, 48901.0);
 
-    zs::Write(oss, nullptr);
-    zs::Write(oss, (void*)(0x12345678));
+    zs::Write(out, nullptr);
+    zs::Write(out, (void*)(0x12345678));
 
-    std::istringstream iss(oss.str());
+    std::istringstream iss(out.Str());
 
     Check(iss, true);
     Check(iss, false);
@@ -78,13 +78,13 @@ TEST_CASE("basic types")
 
 TEST_CASE("string")
 {
-    std::ostringstream oss;
+    zs::StringWriter out;
 
-    zs::Write(oss, "the");
-    zs::Write(oss, "quick"sv);
-    zs::Write(oss, std::string("brown"));
+    zs::Write(out, "the");
+    zs::Write(out, "quick"sv);
+    zs::Write(out, std::string("brown"));
 
-    std::istringstream iss(oss.str());
+    std::istringstream iss(out.Str());
 
     Check(iss, std::string("the"));
     Check(iss, std::string("quick"));
@@ -108,23 +108,23 @@ namespace zs
 
 TEST_CASE("custom")
 {
-    std::ostringstream oss;
+    zs::StringWriter out;
 
-    zs::Write(oss, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
+    zs::Write(out, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
 
-    std::istringstream iss(oss.str());
+    std::istringstream iss(out.Str());
 
     Check(iss, State{ "tom", 99.f, {3.f,10.f,99.f}, {1.4f,0.f,3.f} });
 }
 
 TEST_CASE("optional")
 {
-    std::ostringstream oss;
+    zs::StringWriter out;
 
-    zs::Write(oss, std::optional<std::string>{"fox"});
-    zs::Write(oss, std::optional<Vec3>{std::nullopt});
+    zs::Write(out, std::optional<std::string>{"fox"});
+    zs::Write(out, std::optional<Vec3>{std::nullopt});
 
-    std::istringstream iss(oss.str());
+    std::istringstream iss(out.Str());
 
     Check(iss, std::optional<std::string>("fox"));
     Check(iss, std::optional<Vec3>{std::nullopt});
@@ -132,12 +132,12 @@ TEST_CASE("optional")
 
 TEST_CASE("vector")
 {
-    std::ostringstream oss;
+    zs::StringWriter out;
 
-    zs::Write(oss, std::vector<int32_t>{1, 2, 3});
-    zs::Write(oss, std::vector<std::string>{"jumps", "over", "the"});
+    zs::Write(out, std::vector<int32_t>{1, 2, 3});
+    zs::Write(out, std::vector<std::string>{"jumps", "over", "the"});
 
-    std::istringstream iss(oss.str());
+    std::istringstream iss(out.Str());
 
     Check(iss, std::vector<int32_t>{1, 2, 3});
     Check(iss, std::vector<std::string>{"jumps", "over", "the"});
@@ -145,13 +145,13 @@ TEST_CASE("vector")
 
 TEST_CASE("array")
 {
-    std::ostringstream oss;
+    zs::StringWriter out;
 
-    zs::Write(oss, std::array<float, 3>{10.f, 12.f, 33.f});
-    zs::Write(oss, std::array<std::string, 2>{"lazy", "dog"});
-    zs::Write(oss, std::array<State, 16>{State{ "Jerry", 12.f,{0,0,0},{0,0,1} }});
+    zs::Write(out, std::array<float, 3>{10.f, 12.f, 33.f});
+    zs::Write(out, std::array<std::string, 2>{"lazy", "dog"});
+    zs::Write(out, std::array<State, 16>{State{ "Jerry", 12.f,{0,0,0},{0,0,1} }});
 
-    std::istringstream iss(oss.str());
+    std::istringstream iss(out.Str());
 
     Check(iss, std::array<float, 3>{10.f, 12.f, 33.f});
     Check(iss, std::array<std::string, 2>{"lazy", "dog"});

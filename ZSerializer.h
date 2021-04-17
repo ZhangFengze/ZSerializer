@@ -74,78 +74,90 @@ namespace zs
 	template<typename T>
 	concept DefinedReadTrait = requires{ Trait<T>::Read; };
 
-	void Write(std::ostream& os, const void* source, size_t bytes)
+	struct StringWriter
 	{
-		os.write(reinterpret_cast<const char*>(source), bytes);
-	}
+		void Write(const void* source, size_t bytes)
+		{
+			os.write(reinterpret_cast<const char*>(source), bytes);
+		}
 
-	template<typename T>
-	void Write(std::ostream& os, const T& value);
+		std::string Str() const
+		{
+			return os.str();
+		}
+
+		std::ostringstream os;
+	};
+
+	template<typename T, typename Out>
+	void Write(Out& out, const T& value);
 
 	template<typename T>
 	struct WriteMembers
 	{
-		static void Write(std::ostream& os, const T& value)
+		template<typename Out>
+		static void Write(Out& out, const T& value)
 		{
 			using zs::Write;
-			std::apply([&os, &value](auto&&... args){(Write(os, value.*args), ...);}, Trait<T>::members);
+			std::apply([&out, &value](auto&&... args){(Write(out, value.*args), ...);}, Trait<T>::members);
 		}
 	};
 
-	template<DefinedWriteTrait T>
-	void Write(std::ostream& os, const T& value)
+	template<DefinedWriteTrait T, typename Out>
+	void Write(Out& out, const T& value)
 	{
-		Trait<T>::Write(os, value);
+		Trait<T>::Write(out, value);
 	}
 
-	template<POD T>
-	void Write(std::ostream& os, const T& value)
+	template<POD T, typename Out>
+	void Write(Out& out, const T& value)
 	{
-		Write(os, std::addressof(value), sizeof(value));
+		out.Write(std::addressof(value), sizeof(value));
 	}
 
-	template<Optional T>
-	void Write(std::ostream& os, const T& value)
+	template<Optional T, typename Out>
+	void Write(Out& out, const T& value)
 	{
 		if (value)
 		{
-			Write(os, true);
-			Write(os, *value);
+			Write(out, true);
+			Write(out, *value);
 		}
 		else
 		{
-			Write(os, false);
+			Write(out, false);
 		}
 	}
 
-	void Write(std::ostream& os, const char* value)
+	template<typename Out>
+	void Write(Out& out, const char* value)
 	{
 		size_t size = strlen(value);
-		Write(os, size);
-		Write(os, value, size);
+		Write(out, size);
+		out.Write(value, size);
 	}
 
-	template<typename T>
+	template<typename T, typename Out>
 		requires (Vector<T>&& POD<typename T::value_type>) || String<T> || StringView<T>
-	void Write(std::ostream& os, const T& value)
+	void Write(Out& out, const T& value)
 	{
-		Write(os, value.size());
-		Write(os, value.data(), value.size() * sizeof(T::value_type));
+		Write(out, value.size());
+		out.Write(value.data(), value.size() * sizeof(T::value_type));
 	}
 
-	template<typename T> requires !POD<T>
-	void Write(std::ostream& os, const std::vector<T>& vec)
+	template<typename T, typename Out> requires !POD<T>
+	void Write(Out& out, const std::vector<T>& vec)
 	{
-		Write(os, vec.size());
+		Write(out, vec.size());
 		for (const auto& v : vec)
-			Write(os, v);
+			Write(out, v);
 	}
 
-	template<typename T, size_t size> requires !POD<T>
-	void Write(std::ostream& os, const std::array<T, size>& arr)
+	template<typename T, size_t size, typename Out> requires !POD<T>
+	void Write(Out& out, const std::array<T, size>& arr)
 	{
 		for (const auto& v : arr)
-			Write(os, v);
+			Write(out, v);
 	}
 
 	bool Read(std::istream& is, void* dest, size_t bytes)
