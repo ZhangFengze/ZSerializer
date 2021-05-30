@@ -153,7 +153,7 @@ namespace zs
 	void Write(Out& out, const T& value)
 	{
 		Write(out, value.size());
-		out.Write(value.data(), value.size() * sizeof(T::value_type));
+		out.Write(value.data(), value.size() * sizeof(typename T::value_type));
 	}
 
 	template<typename T, typename Out> requires !POD<T>
