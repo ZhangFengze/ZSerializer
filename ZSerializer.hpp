@@ -69,11 +69,11 @@ namespace zs
 	template<typename T>
 	struct Trait;
 
-	template<typename T>
-	concept DefinedWriteTrait = requires{ Trait<T>::Write; };
+	template<typename T, typename Out>
+	concept DefinedWriteTrait = requires (Out o, T t){ Trait<T>::Write(o, t); };
 
-	template<typename T>
-	concept DefinedReadTrait = requires{ Trait<T>::Read; };
+	template<typename T, typename In>
+	concept DefinedReadTrait = requires (In in, T t){ Trait<T>::Read(in); };
 
 	struct StringWriter
 	{
@@ -114,7 +114,7 @@ namespace zs
 		}
 	};
 
-	template<DefinedWriteTrait T, typename Out>
+	template<typename T, typename Out> requires DefinedWriteTrait<T, Out>
 	void Write(Out& out, const T& value)
 	{
 		Trait<T>::Write(out, value);
@@ -244,7 +244,7 @@ namespace zs
 		}
 	};
 
-	template<DefinedReadTrait T, typename In>
+	template<typename T, typename In> requires DefinedReadTrait<T, In>
 	std::variant<T, Error> Read(In& in)
 	{
 		return Trait<T>::Read(in);
