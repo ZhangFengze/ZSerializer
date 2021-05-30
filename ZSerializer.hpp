@@ -4,6 +4,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <string_view>
 #include <variant>
 #include <optional>
@@ -143,7 +144,7 @@ namespace zs
 	template<typename Out>
 	void Write(Out& out, const char* value)
 	{
-		size_t size = strlen(value);
+		size_t size = std::strlen(value);
 		Write(out, size);
 		out.Write(value, size);
 	}
@@ -156,7 +157,7 @@ namespace zs
 		out.Write(value.data(), value.size() * sizeof(typename T::value_type));
 	}
 
-	template<typename T, typename Out> requires !POD<T>
+	template<typename T, typename Out> requires (!POD<T>)
 	void Write(Out& out, const std::vector<T>& vec)
 	{
 		Write(out, vec.size());
@@ -164,7 +165,7 @@ namespace zs
 			Write(out, v);
 	}
 
-	template<typename T, size_t size, typename Out> requires !POD<T>
+	template<typename T, size_t size, typename Out> requires (!POD<T>)
 	void Write(Out& out, const std::array<T, size>& arr)
 	{
 		for (const auto& v : arr)
@@ -277,12 +278,12 @@ namespace zs
 
 		T value;
 		value.resize(size);
-		if (!in.Read(value.data(), value.size() * sizeof(T::value_type)))
+		if (!in.Read(value.data(), value.size() * sizeof(typename T::value_type)))
 			return Error{};
 		return value;
 	}
 
-	template<typename T, typename In> requires Vector<T> && !POD<typename T::value_type>
+	template<typename T, typename In> requires (Vector<T> && !POD<typename T::value_type>)
 	std::variant<T, Error> Read(In& in)
 	{
 		ZS_READ(size_t, in, size);
@@ -296,7 +297,7 @@ namespace zs
 		return vec;
 	}
 
-	template<typename T, typename In> requires Array<T> && !POD<typename T::value_type>
+	template<typename T, typename In> requires (Array<T> && !POD<typename T::value_type>)
 	std::variant<T, Error> Read(In& in)
 	{
 		T arr;
